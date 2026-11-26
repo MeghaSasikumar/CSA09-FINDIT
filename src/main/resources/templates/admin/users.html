@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Students and batches')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<div class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+    <h1 class="h3 fw-bold mb-3">Students &amp; batches</h1>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-5">
+            <div class="card h-100"><div class="card-body">
+                <h2 class="h6 fw-bold">Add a new batch (CSV upload)</h2>
+                <p class="small text-muted">Columns: <code>rollNo,name,email,department,batchYear</code>. Each student's first password is their register number, and they must change it at first login.</p>
+                <form th:action="@{/admin/users/import(_csrf=${_csrf.token})}" method="post" enctype="multipart/form-data">
+                    <input class="form-control mb-2" type="file" name="file" accept=".csv" required>
+                    <button class="btn btn-primary">Upload and add students</button>
+                </form>
+            </div></div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card h-100"><div class="card-body">
+                <h2 class="h6 fw-bold">Add one student</h2>
+                <form class="row g-2" th:action="@{/admin/users/add}" method="post">
+                    <div class="col-md-4"><input class="form-control" name="rollNo" placeholder="Register number" required></div>
+                    <div class="col-md-8"><input class="form-control" name="name" placeholder="Full name" required></div>
+                    <div class="col-md-5"><input class="form-control" type="email" name="email" placeholder="192xxxxxx.simats@saveetha.com" required></div>
+                    <div class="col-md-4"><input class="form-control" name="department" placeholder="Department" required></div>
+                    <div class="col-md-3"><input class="form-control" type="number" name="batchYear" placeholder="Batch" required></div>
+                    <div class="col-12"><button class="btn btn-outline-primary">Add student</button></div>
+                </form>
+                <hr>
+                <h2 class="h6 fw-bold">Graduation: mark a batch as alumni</h2>
+                <form class="d-flex gap-2" th:action="@{/admin/users/deactivate-batch}" method="post"
+                      onsubmit="return confirm('Block login for every student of this batch?');">
+                    <input class="form-control" type="number" name="batchYear" placeholder="Batch year, e.g. 2022" required>
+                    <button class="btn btn-outline-danger text-nowrap">Mark as alumni</button>
+                </form>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row g-2 mb-2">
+        <div class="col-md-6"><input id="userSearch" class="form-control" placeholder="Search by name, register number or email"></div>
+        <div class="col-md-3">
+            <select id="batchFilter" class="form-select">
+                <option value="">All batches</option>
+                <option th:each="b : ${batches}" th:value="${b}" th:text="${b}"></option>
+            </select>
+        </div>
+        <div class="col-md-3 text-md-end text-muted small align-self-center"><span id="userCount" th:text="${#lists.size(users)}">0</span> users shown</div>
+    </div>
+    <div class="table-responsive">
+        <table class="table bg-white align-middle">
+            <thead><tr><th>Roll no</th><th>Name</th><th>Email</th><th>Dept</th><th>Batch</th><th>Role</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="u : ${users}" th:attr="data-search=${(u.rollNo + ' ' + u.name + ' ' + u.email).toLowerCase()},data-batch=${u.batchYear}">
+                <td th:text="${u.rollNo}">roll</td>
+                <td th:text="${u.name}">name</td>
+                <td class="small" th:text="${u.email}">email</td>
+                <td th:text="${u.department}">dept</td>
+                <td th:text="${u.batchYear}">2026</td>
+                <td th:text="${u.role}">STUDENT</td>
+                <td><span class="badge" th:classappend="${u.active} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${u.active} ? 'Active' : 'Alumni'">s</span></td>
+                <td>
+                    <form th:action="@{/admin/users/{id}/reset(id=${u.id})}" method="post" th:if="${u.role.name() == 'STUDENT'}">
+                        <button class="btn btn-sm btn-outline-secondary">Reset password</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    const searchBox = document.getElementById('userSearch');
+    const batchBox = document.getElementById('batchFilter');
+    const userRows = Array.from(document.querySelectorAll('tbody tr[data-search]'));
+    const counter = document.getElementById('userCount');
+    function applyFilter() {
+        const q = searchBox.value.trim().toLowerCase();
+        let shown = 0;
+        userRows.forEach(function (r) {
+            const ok = (!q || r.dataset.search.includes(q)) && (!batchBox.value || r.dataset.batch === batchBox.value);
+            r.style.display = ok ? '' : 'none';
+            if (ok) shown++;
+        });
+        counter.textContent = shown;
+    }
+    searchBox.addEventListener('input', applyFilter);
+    batchBox.addEventListener('change', applyFilter);
+</script>
+</body>
+</html>

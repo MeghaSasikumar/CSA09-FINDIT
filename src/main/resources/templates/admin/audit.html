@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Audit log')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<div class="container">
+    <h1 class="h3 fw-bold mb-3">Audit log</h1>
+    <p class="text-muted">The latest 200 actions. Entries cannot be edited from the app.</p>
+    <div class="table-responsive">
+        <table class="table bg-white table-sm align-middle">
+            <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead>
+            <tbody>
+            <tr th:each="l : ${logs}">
+                <td class="text-nowrap" th:text="${#temporals.format(l.createdAt, 'dd MMM yyyy HH:mm')}">time</td>
+                <td th:text="${l.actor}">who</td>
+                <td><code th:text="${l.action}">ACTION</code></td>
+                <td th:text="${l.details}">details</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

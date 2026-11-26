@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Lost reports')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<div class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h1 class="h3 fw-bold mb-0">Open lost reports</h1>
+        <form th:action="@{/admin/lost/followup}" method="post">
+            <button class="btn btn-outline-primary btn-sm">Send reminders now (older than <span th:text="${days}">30</span> days, no match)</button>
+        </form>
+    </div>
+    <p class="text-muted small">
+        The system also sends this reminder automatically every day. If an item truly cannot be found,
+        close the report here and the owner is informed.
+    </p>
+
+    <p class="text-muted" th:if="${#lists.isEmpty(items)}">No open lost reports.</p>
+    <div class="table-responsive" th:unless="${#lists.isEmpty(items)}">
+        <table class="table bg-white align-middle">
+            <thead><tr><th>Reported</th><th>Owner</th><th>Item</th><th>Where</th><th>Close as not found</th></tr></thead>
+            <tbody>
+            <tr th:each="i : ${items}">
+                <td class="text-nowrap" th:text="${#temporals.format(i.createdAt, 'dd MMM yyyy')}">date</td>
+                <td><span th:text="${i.owner.name}">name</span><div class="small text-muted" th:text="${i.owner.rollNo}">roll</div></td>
+                <td><span th:text="${i.title}">title</span><div class="small text-muted" th:text="${i.category}">cat</div></td>
+                <td th:text="${i.location}">loc</td>
+                <td>
+                    <form class="d-flex gap-2" th:action="@{/admin/lost/{id}/not-found(id=${i.id})}" method="post"
+                          onsubmit="return confirm('Close this report as not found and inform the owner?');">
+                        <input class="form-control form-control-sm" name="message" maxlength="400" placeholder="Message to owner (optional)">
+                        <button class="btn btn-sm btn-outline-dark text-nowrap">Not found</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<div class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+    <h1 class="h3 fw-bold">Hello, <span th:text="${user.name}">Student</span></h1>
+    <p class="text-muted">Found items are never shown publicly. You only see a suggestion when your private answers match.</p>
+
+    <div class="row g-3 my-2">
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <div class="stat" th:text="${lostCount}">0</div><div class="text-muted">items you reported lost</div>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <div class="stat" th:text="${suggestions}">0</div><div class="text-muted">possible matches waiting for you</div>
+        </div></div></div>
+        <div class="col-md-4"><div class="card h-100"><div class="card-body">
+            <div class="stat" th:text="${foundCount}">0</div><div class="text-muted">items you reported found</div>
+        </div></div></div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        <a class="btn btn-accent" th:href="@{/lost/new}">I lost something</a>
+        <a class="btn btn-primary" th:href="@{/found/new}">I found something</a>
+        <a class="btn btn-outline-primary" th:href="@{/lost/mine}">See my matches</a>
+    </div>
+
+    <div class="row g-3 mt-3">
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h2 class="h6 fw-bold">If you lost something</h2>
+            <ol class="mb-0 small">
+                <li>Report it with the place and date.</li>
+                <li>Answer the private questions from memory.</li>
+                <li>If a found item matches, you see a match percentage.</li>
+                <li>Ask the admin to verify, then collect it with your ID card.</li>
+            </ol>
+        </div></div></div>
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h2 class="h6 fw-bold">If you found something</h2>
+            <ol class="mb-0 small">
+                <li>Report it and say where you handed it in.</li>
+                <li>Note details only the owner would know. They stay hidden.</li>
+                <li>Do not share those details with anyone.</li>
+                <li>The admin confirms the owner before it is returned.</li>
+            </ol>
+        </div></div></div>
+    </div>
+</div>
+</body>
+</html>

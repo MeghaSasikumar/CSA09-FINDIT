@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('My lost items')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<div class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 fw-bold mb-0">My lost items</h1>
+        <a class="btn btn-accent" th:href="@{/lost/new}">Report another</a>
+    </div>
+
+    <p class="text-muted" th:if="${#lists.isEmpty(items)}">You have not reported anything lost yet.</p>
+
+    <div class="card mb-4" th:each="item : ${items}">
+        <div class="card-header bg-white d-flex justify-content-between">
+            <strong th:text="${item.title}">Title</strong>
+            <span class="badge text-bg-success" th:if="${item.status.name() == 'RECOVERED'}">Recovered</span>
+            <span class="badge text-bg-dark" th:if="${item.status.name() == 'NOT_FOUND'}">Not found</span>
+            <span class="badge text-bg-light border" th:if="${item.status.name() == 'WITHDRAWN'}">Closed by you</span>
+            <span class="badge text-bg-secondary" th:if="${item.status.name() == 'OPEN'}">Still missing</span>
+        </div>
+        <div class="card-body">
+            <div class="d-flex gap-3 mb-3">
+                <img th:if="${item.photoId != null}" th:src="@{/photos/{id}(id=${item.photoId})}" class="item-photo" alt="Your photo">
+                <div class="small text-muted">
+                    <span th:text="${item.category}">Category</span> &middot;
+                    <span th:text="${item.location}">Location</span> &middot;
+                    <span th:text="${item.itemDate}">Date</span>
+                </div>
+            </div>
+
+            <form class="mb-3" th:if="${item.status.name() == 'OPEN'}" th:action="@{/lost/{id}/withdraw(id=${item.id})}" method="post"
+                  onsubmit="return confirm('Close this report? Use this if you found the item yourself.');">
+                <button class="btn btn-outline-secondary btn-sm">I found it myself - close this report</button>
+            </form>
+
+            <div class="alert alert-dark" th:if="${item.status.name() == 'NOT_FOUND'}">
+                <strong>We could not find this item.</strong>
+                <span th:text="${item.closingNote}">note</span>
+            </div>
+            <div class="alert alert-info small" th:if="${item.followUpSent == true and item.status.name() == 'OPEN'}">
+                We have not found this item yet. Please also check at the security office. Your report stays open and
+                we will notify you if a match appears.
+            </div>
+
+            <div th:with="ms=${matches.get(item.id)}">
+                <p class="mb-0 text-muted" th:if="${#lists.isEmpty(ms) and item.status.name() == 'OPEN'}">
+                    No match yet. When someone reports a found item that fits your details, it appears here with a percentage.
+                </p>
+
+                <div class="border rounded p-3 mb-3" th:each="m : ${ms}">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <div class="pct"><span th:text="${#numbers.formatDecimal(m.totalScore, 1, 0)}">87</span>% match</div>
+                            <div class="small text-muted">
+                                Found item: <span th:text="${m.foundItem.title}">title</span> &middot;
+                                <span th:text="${m.foundItem.location}">location</span> &middot;
+                                <span th:text="${m.foundItem.itemDate}">date</span>
+                            </div>
+                        </div>
+                        <span class="badge text-bg-warning" th:if="${m.status.name() == 'VERIFICATION_REQUESTED'}">Waiting for admin</span>
+                        <span class="badge text-bg-info" th:if="${m.status.name() == 'APPROVED'}">Approved - please inspect</span>
+                        <span class="badge text-bg-success" th:if="${m.status.name() == 'COLLECTED'}">Collected</span>
+                        <span class="badge text-bg-danger" th:if="${m.status.name() == 'MISMATCH_REPORTED'}">Reported to admin</span>
+                        <span class="badge text-bg-secondary" th:if="${m.status.name() == 'REJECTED'}">Closed</span>
+                    </div>
+                    <div class="match-bar my-2"><div th:style="'width:' + ${m.totalScore} + '%'"></div></div>
+                    <div class="small text-muted">
+                        Public details <span th:text="${#numbers.formatDecimal(m.publicScore, 1, 0)}">0</span>/60 &middot;
+                        Private answers <span th:text="${#numbers.formatDecimal(m.privateScore, 1, 0)}">0</span>/40
+                    </div>
+
+                    <!-- SUGGESTED -->
+                    <div th:if="${m.status.name() == 'SUGGESTED'}">
+                        <form class="mt-2" th:if="${m.foundItem.status.name() == 'OPEN' and item.status.name() == 'OPEN'}"
+                              th:action="@{/matches/{id}/verify(id=${m.id})}" method="post">
+                            <button class="btn btn-primary btn-sm">This looks like mine - ask admin to verify</button>
+                        </form>
+                        <div class="small text-muted mt-2" th:unless="${m.foundItem.status.name() == 'OPEN'}">
+                            This found item is reserved for another verified owner right now.
+                        </div>
+                    </div>
+
+                    <!-- APPROVED: owner goes and looks at the item -->
+                    <div th:if="${m.status.name() == 'APPROVED'}">
+                        <div class="hold-box mt-3">
+                            <strong>Go and check the item at:</strong> <span th:text="${m.foundItem.holdingPlace}">place</span><br>
+                            <span class="small">Carry your college ID card.</span>
+                            <div class="small" th:if="${m.adminNote}">Admin note: <span th:text="${m.adminNote}"></span></div>
+                            <img th:if="${m.foundItem.photoId != null}" th:src="@{/photos/{id}(id=${m.foundItem.photoId})}"
+                                 class="photo-lg mt-2 d-block" alt="Found item photo">
+                        </div>
+                        <div th:if="${item.status.name() == 'OPEN'}">
+                            <form class="mt-3" th:action="@{/matches/{id}/collected(id=${m.id})}" method="post">
+                                <button class="btn btn-success btn-sm">Yes, this is my item - I collected it</button>
+                            </form>
+                            <details class="mt-2">
+                                <summary class="small text-danger">It is NOT my item - report to admin</summary>
+                                <form class="mt-2" th:action="@{/matches/{id}/mismatch(id=${m.id})}" method="post">
+                                    <textarea name="reason" class="form-control form-control-sm" rows="2" maxlength="400" required
+                                              placeholder="What was different? (e.g. different colour, no scratch, wrong model)"></textarea>
+                                    <button class="btn btn-outline-danger btn-sm mt-2">Send report to admin</button>
+                                </form>
+                            </details>
+                        </div>
+                    </div>
+
+                    <div class="warn-box mt-3 small" th:if="${m.status.name() == 'MISMATCH_REPORTED'}">
+                        You reported that this is not your item. The admin is reviewing it.<br>
+                        <span class="text-muted">Your reason: <span th:text="${m.mismatchReason}"></span></span>
+                    </div>
+                    <div class="small mt-2 text-muted" th:if="${m.status.name() == 'REJECTED' and m.adminNote != null}">
+                        Note: <span th:text="${m.adminNote}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

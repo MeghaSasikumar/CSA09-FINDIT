@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Log in')}"></head>
+<body>
+<div class="login-wrap px-3">
+    <h1 class="h2 fw-bold text-center mb-1">Find<span style="color:#f4b942">It</span></h1>
+    <p class="text-center text-muted mb-4">Campus lost &amp; found, verified by private questions</p>
+    <div class="card"><div class="card-body p-4">
+        <div class="alert alert-danger" th:if="${param.error}">Wrong email/register number or password, or you are not registered. Only college accounts can log in. After 5 wrong attempts the account is locked for 15 minutes.</div>
+        <div class="alert alert-info" th:if="${param.logout}">You have been logged out.</div>
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <label class="form-label" for="username">College email or register number</label>
+                <input class="form-control" id="username" name="username" autofocus required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="password">Password</label>
+                <input class="form-control" id="password" name="password" type="password" required>
+                <div class="form-text">First login? Your password is your register number. You will be asked to change it.</div>
+            </div>
+            <button class="btn btn-primary w-100">Log in</button>
+        </form>
+    </div></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Verify claims')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<div class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+
+    <!-- Owners who inspected the item and say it is not theirs -->
+    <div th:unless="${#lists.isEmpty(mismatches)}">
+        <h1 class="h3 fw-bold mb-3 text-danger">Owner reports: "this is not my item"</h1>
+        <div class="card border-danger mb-4" th:each="m : ${mismatches}">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <strong>Match #<span th:text="${m.id}">1</span></strong>
+                <span class="pct"><span th:text="${#numbers.formatDecimal(m.totalScore, 1, 0)}">87</span>% match</span>
+            </div>
+            <div class="card-body">
+                <div class="warn-box mb-3">
+                    <strong th:text="${m.lostItem.owner.name}">name</strong>
+                    (<span th:text="${m.lostItem.owner.rollNo}">roll</span>) inspected the item and says:<br>
+                    <em th:text="${m.mismatchReason}">reason</em>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="fw-bold small">Owner's lost report</div>
+                        <div th:text="${m.lostItem.title}">title</div>
+                        <ul class="small mt-1 mb-1">
+                            <li th:if="${m.lostItem.private1}">Answer 1: <span th:text="${m.lostItem.private1}"></span></li>
+                            <li th:if="${m.lostItem.private2}">Answer 2: <span th:text="${m.lostItem.private2}"></span></li>
+                            <li th:if="${m.lostItem.private3}">Answer 3: <span th:text="${m.lostItem.private3}"></span></li>
+                        </ul>
+                        <img th:if="${m.lostItem.photoId != null}" th:src="@{/photos/{id}(id=${m.lostItem.photoId})}" class="photo-lg mt-1" alt="Lost item photo">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="fw-bold small">Found item (kept at <span th:text="${m.foundItem.holdingPlace}">place</span>)</div>
+                        <div th:text="${m.foundItem.title}">title</div>
+                        <ul class="small mt-1 mb-1">
+                            <li th:if="${m.foundItem.private1}">Detail 1: <span th:text="${m.foundItem.private1}"></span></li>
+                            <li th:if="${m.foundItem.private2}">Detail 2: <span th:text="${m.foundItem.private2}"></span></li>
+                            <li th:if="${m.foundItem.private3}">Detail 3: <span th:text="${m.foundItem.private3}"></span></li>
+                        </ul>
+                        <img th:if="${m.foundItem.photoId != null}" th:src="@{/photos/{id}(id=${m.foundItem.photoId})}" class="photo-lg mt-1" alt="Found item photo">
+                    </div>
+                </div>
+                <form class="mt-3" th:action="@{/admin/claims/{id}/mismatch(id=${m.id})}" method="post">
+                    <input class="form-control mb-2" name="note" maxlength="400" placeholder="Your note (shown to the owner and kept in the audit log)">
+                    <button class="btn btn-danger" name="decision" value="confirm">Confirm: not their item - reopen it for others</button>
+                    <button class="btn btn-outline-secondary" name="decision" value="dismiss">Dismiss: item may be theirs</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <h1 class="h3 fw-bold mb-3">Claims waiting for verification</h1>
+    <p class="text-muted" th:if="${#lists.isEmpty(pending)}">No claims are waiting.</p>
+
+    <div class="card mb-4" th:each="m : ${pending}">
+        <div class="card-header bg-white d-flex justify-content-between">
+            <strong>Match #<span th:text="${m.id}">1</span></strong>
+            <span class="pct"><span th:text="${#numbers.formatDecimal(m.totalScore, 1, 0)}">87</span>% match</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h2 class="h6 fw-bold">Claimant's lost report</h2>
+                    <div><span th:text="${m.lostItem.owner.name}">name</span> (<span th:text="${m.lostItem.owner.rollNo}">roll</span>, batch <span th:text="${m.lostItem.owner.batchYear}">2026</span>)</div>
+                    <div class="small text-muted" th:text="${m.lostItem.owner.email}">mail</div>
+                    <div class="mt-2"><strong th:text="${m.lostItem.title}">title</strong> &middot; <span th:text="${m.lostItem.category}">cat</span></div>
+                    <div class="small" th:text="${m.lostItem.location} + ', ' + ${m.lostItem.itemDate}">loc</div>
+                    <ul class="mt-2 mb-2">
+                        <li th:if="${m.lostItem.private1}">Answer 1: <span th:text="${m.lostItem.private1}"></span></li>
+                        <li th:if="${m.lostItem.private2}">Answer 2: <span th:text="${m.lostItem.private2}"></span></li>
+                        <li th:if="${m.lostItem.private3}">Answer 3: <span th:text="${m.lostItem.private3}"></span></li>
+                    </ul>
+                    <img th:if="${m.lostItem.photoId != null}" th:src="@{/photos/{id}(id=${m.lostItem.photoId})}" class="photo-lg" alt="Lost item photo">
+                </div>
+                <div class="col-md-6">
+                    <h2 class="h6 fw-bold">Finder's hidden details</h2>
+                    <div><span th:text="${m.foundItem.finder.name}">name</span> (<span th:text="${m.foundItem.finder.rollNo}">roll</span>)</div>
+                    <div class="mt-2"><strong th:text="${m.foundItem.title}">title</strong> &middot; <span th:text="${m.foundItem.category}">cat</span></div>
+                    <div class="small" th:text="${m.foundItem.location} + ', ' + ${m.foundItem.itemDate}">loc</div>
+                    <ul class="mt-2 mb-2">
+                        <li th:if="${m.foundItem.private1}">Detail 1: <span th:text="${m.foundItem.private1}"></span></li>
+                        <li th:if="${m.foundItem.private2}">Detail 2: <span th:text="${m.foundItem.private2}"></span></li>
+                        <li th:if="${m.foundItem.private3}">Detail 3: <span th:text="${m.foundItem.private3}"></span></li>
+                    </ul>
+                    <div class="small mb-2">Kept at: <strong th:text="${m.foundItem.holdingPlace}">place</strong></div>
+                    <img th:if="${m.foundItem.photoId != null}" th:src="@{/photos/{id}(id=${m.foundItem.photoId})}" class="photo-lg" alt="Found item photo">
+                </div>
+            </div>
+            <div class="small text-muted mt-3">
+                Public details <span th:text="${#numbers.formatDecimal(m.publicScore, 1, 0)}">0</span>/60 &middot;
+                Private answers <span th:text="${#numbers.formatDecimal(m.privateScore, 1, 0)}">0</span>/40
+            </div>
+            <div class="warn-box mt-2 small" th:unless="${m.foundItem.status.name() == 'OPEN'}">
+                This found item is already reserved for another verified owner, so it cannot be approved now.
+            </div>
+            <form class="mt-3" th:action="@{/admin/claims/{id}(id=${m.id})}" method="post">
+                <input class="form-control mb-2" name="note" maxlength="400" placeholder="Note for the audit log (e.g. ID card checked in person)">
+                <button class="btn btn-success" name="decision" value="approve" th:disabled="${m.foundItem.status.name() != 'OPEN'}">Approve - owner may collect it</button>
+                <button class="btn btn-outline-danger" name="decision" value="reject">Reject</button>
+            </form>
+        </div>
+    </div>
+
+    <h2 class="h5 fw-bold mt-5">Recent decisions</h2>
+    <p class="small text-muted" th:if="${#lists.isEmpty(history)}">No decisions yet.</p>
+    <div class="table-responsive" th:unless="${#lists.isEmpty(history)}">
+        <table class="table bg-white align-middle">
+            <thead><tr><th>Match</th><th>Claimant</th><th>Item</th><th>Score</th><th>Status</th><th>By</th><th>Note</th></tr></thead>
+            <tbody>
+            <tr th:each="h : ${history}">
+                <td th:text="'#' + ${h.id}">#1</td>
+                <td th:text="${h.lostItem.owner.rollNo}">roll</td>
+                <td th:text="${h.foundItem.title}">item</td>
+                <td th:text="${#numbers.formatDecimal(h.totalScore, 1, 0)} + '%'">80%</td>
+                <td>
+                    <span class="badge text-bg-info" th:if="${h.status.name() == 'APPROVED'}">Approved - awaiting pickup</span>
+                    <span class="badge text-bg-success" th:if="${h.status.name() == 'COLLECTED'}">Collected</span>
+                    <span class="badge text-bg-danger" th:if="${h.status.name() == 'REJECTED' and h.mismatchReason == null}">Rejected</span>
+                    <span class="badge text-bg-dark" th:if="${h.status.name() == 'REJECTED' and h.mismatchReason != null}">Not their item</span>
+                </td>
+                <td th:text="${h.decidedBy}">admin</td>
+                <td th:text="${h.adminNote}">note</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

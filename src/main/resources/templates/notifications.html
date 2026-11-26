@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Notifications')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<div class="container" style="max-width: 800px">
+    <h1 class="h3 fw-bold mb-3">Notifications</h1>
+    <p class="text-muted" th:if="${#lists.isEmpty(items)}">
+        Nothing yet. We will tell you here when a match is found, when a claim is decided, or when your item could not be found.
+    </p>
+    <div class="list-group">
+        <a th:each="n : ${items}" class="list-group-item list-group-item-action"
+           th:classappend="${!n.seen} ? 'border-warning bg-warning-subtle'"
+           th:href="${n.link != null} ? @{${n.link}} : '#'">
+            <div class="d-flex justify-content-between">
+                <span th:text="${n.message}">message</span>
+                <small class="text-muted text-nowrap ms-3" th:text="${#temporals.format(n.createdAt, 'dd MMM, HH:mm')}">time</small>
+            </div>
+        </a>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Something went wrong')}"></head>
+<body>
+<div class="login-wrap px-3 text-center">
+    <h1 class="h3 fw-bold"
+        th:text="${status == 404} ? 'Page not found' : (${status == 403} ? 'You cannot open this page' : 'Something went wrong')">Something went wrong</h1>
+    <p class="text-muted">Please go back and try again. If it keeps happening, tell the admin what you were doing.</p>
+    <p class="small text-muted" th:if="${message != null and !#strings.isEmpty(message)}" th:text="${message}"></p>
+    <a class="btn btn-primary" th:href="@{/dashboard}">Back to home</a>
+</div>
+</body>
+</html>

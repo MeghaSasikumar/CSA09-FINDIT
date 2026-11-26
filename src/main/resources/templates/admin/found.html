@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Found items')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<div class="container">
+    <div th:replace="~{fragments :: flash}"></div>
+    <h1 class="h3 fw-bold mb-1">Found items in custody</h1>
+    <p class="text-muted small">Everything students have handed in that has not been returned yet. Use this list when you check the security office.</p>
+
+    <p class="text-muted" th:if="${#lists.isEmpty(items)}">Nothing is waiting for an owner.</p>
+    <div class="table-responsive" th:unless="${#lists.isEmpty(items)}">
+        <table class="table bg-white align-middle">
+            <thead><tr><th></th><th>Item</th><th>Found at</th><th>Date</th><th>Kept at</th><th>Handed in by</th><th>Status</th></tr></thead>
+            <tbody>
+            <tr th:each="i : ${items}">
+                <td><img th:if="${i.photoId != null}" th:src="@{/photos/{id}(id=${i.photoId})}" class="item-photo" style="width:64px;height:64px" alt=""></td>
+                <td><span th:text="${i.title}">title</span><div class="small text-muted" th:text="${i.category}">cat</div></td>
+                <td th:text="${i.location}">loc</td>
+                <td class="text-nowrap" th:text="${i.itemDate}">date</td>
+                <td th:text="${i.holdingPlace}">place</td>
+                <td><span th:text="${i.finder.name}">name</span><div class="small text-muted" th:text="${i.finder.rollNo}">roll</div></td>
+                <td>
+                    <span class="badge text-bg-secondary" th:if="${i.status.name() == 'OPEN'}">Waiting for owner</span>
+                    <span class="badge text-bg-info" th:if="${i.status.name() == 'RESERVED'}">Reserved - pickup pending</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
